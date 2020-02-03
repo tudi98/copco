@@ -1,1 +1,1 @@
-### README
+# COmpetitive Programming COmpanion (copco)
