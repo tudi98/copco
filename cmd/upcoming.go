@@ -20,11 +20,11 @@ func init() {
 }
 
 func upcoming() {
-	fmt.Println("***** Upcoming Contests *****")
-	p := parser.CodeforcesParser{}
+	var p parser.Parser = parser.CodeforcesParser{}
 	upcomingContests := p.GetUpcoming()
+	fmt.Println("***** Upcoming Contests *****\n")
 	for _, v := range upcomingContests {
 		fmt.Println(v)
 	}
-	fmt.Println("*****************************")
+	fmt.Println("\n*****************************")
 }
