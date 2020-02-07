@@ -1,9 +1,9 @@
 package parser
 
 type Problem struct {
-	problemId   int
-	timeLimit   int
-	memoryLimit int
+	problemId   string
+	timeLimit   string
+	memoryLimit string
 	inputs      []string
 	outputs     []string
 }
