@@ -33,9 +33,9 @@ func (CodeforcesParser) GetProblem(url string) Problem {
 	url_array := strings.Split(url, "/")
 
 	if strings.Contains(url, "problemset") {
-		problem.problemId = url_array[len(url_array)-2] + url_array[len(url_array)-1]
+		problem.Id = url_array[len(url_array)-2] + url_array[len(url_array)-1]
 	} else {
-		problem.problemId = url_array[len(url_array)-3] + url_array[len(url_array)-1]
+		problem.Id = url_array[len(url_array)-3] + url_array[len(url_array)-1]
 	}
 
 	c := colly.NewCollector(
@@ -44,17 +44,17 @@ func (CodeforcesParser) GetProblem(url string) Problem {
 
 	c.OnHTML("div.problem-statement", func(e *colly.HTMLElement) {
 		text := strings.Split(e.ChildText("div.header > div.time-limit"), "test")[1]
-		problem.timeLimit = strings.Split(text, " ")[0]
+		problem.TimeLimit = strings.Split(text, " ")[0]
 		text = strings.Split(e.ChildText("div.header > div.memory-limit"), "test")[1]
-		problem.memoryLimit = strings.Split(text, " ")[0]
+		problem.MemoryLimit = strings.Split(text, " ")[0]
 	})
 
 	c.OnHTML("div.input > pre", func(e *colly.HTMLElement) {
-		problem.inputs = append(problem.inputs, e.Text)
+		problem.Inputs = append(problem.Inputs, e.Text)
 	})
 
 	c.OnHTML("div.output > pre", func(e *colly.HTMLElement) {
-		problem.outputs = append(problem.outputs, e.Text)
+		problem.Outputs = append(problem.Outputs, e.Text)
 	})
 
 	c.Visit(url)
