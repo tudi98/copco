@@ -32,11 +32,13 @@ func (CodeforcesParser) GetProblem(url string) Problem {
 
 	url_array := strings.Split(url, "/")
 
+	problem.Type = url_array[len(url_array)-1]
 	if strings.Contains(url, "problemset") {
-		problem.Id = url_array[len(url_array)-2] + url_array[len(url_array)-1]
+		problem.ContestId = url_array[len(url_array)-2]
 	} else {
-		problem.Id = url_array[len(url_array)-3] + url_array[len(url_array)-1]
+		problem.ContestId = url_array[len(url_array)-3]
 	}
+	problem.Id = problem.ContestId + problem.Type
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("codeforces.com"),

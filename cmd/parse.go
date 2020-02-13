@@ -35,13 +35,11 @@ func parseProblem(url string) {
 	}
 
 	problem_path := os.Getenv("COPCO_PATH") + separator + "codeforces" +
-		separator + "problemset" + separator + problem.Id
+		separator + problem.ContestId + separator + problem.Type
 	template_path := os.Getenv("COPCO_TEMPLATE")
 
 	if _, err := os.Stat(problem_path); os.IsNotExist(err) {
 		os.MkdirAll(problem_path, os.ModePerm)
-	} else {
-		log.Fatal(err)
 	}
 
 	from, err := os.Open(template_path)
@@ -61,8 +59,13 @@ func parseProblem(url string) {
 		log.Fatal(err)
 	}
 
+	tests_path := problem_path + separator + "tests"
+	if _, err := os.Stat(tests_path); os.IsNotExist(err) {
+		os.MkdirAll(tests_path, os.ModePerm)
+	}
+
 	for i, v := range problem.Inputs {
-		file, err := os.OpenFile(problem_path+separator+fmt.Sprintf("%d.in", i), os.O_RDWR|os.O_CREATE, 0666)
+		file, err := os.OpenFile(tests_path+separator+fmt.Sprintf("%d.in", i), os.O_RDWR|os.O_CREATE, 0666)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -71,7 +74,7 @@ func parseProblem(url string) {
 	}
 
 	for i, v := range problem.Outputs {
-		file, err := os.OpenFile(problem_path+separator+fmt.Sprintf("%d.ok", i), os.O_RDWR|os.O_CREATE, 0666)
+		file, err := os.OpenFile(tests_path+separator+fmt.Sprintf("%d.ok", i), os.O_RDWR|os.O_CREATE, 0666)
 		if err != nil {
 			log.Fatal(err)
 		}
