@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"runtime"
 
 	"github.com/tudi98/copco/pkg/parser"
 
@@ -45,4 +47,37 @@ func run() {
 		return
 	}
 	fmt.Println("Successful!")
+
+	input_files := getFilesWithExtension(".in")
+
+	fmt.Printf("%v\n", input_files)
+
+	for i, _ := range input_files {
+		fmt.Printf("Running on test %d...", i)
+		fmt.Printf("OK\n")
+	}
+}
+
+func getFilesWithExtension(ext string) []string {
+	path, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	separator := "/"
+	if runtime.GOOS == "windows" {
+		separator = "\\"
+	}
+
+	path = path + separator + "tests"
+
+	var files []string
+	filepath.Walk(path, func(path string, f os.FileInfo, _ error) error {
+		if !f.IsDir() && filepath.Ext(path) == ext {
+			files = append(files, f.Name())
+		}
+		return nil
+	})
+
+	return files
 }
