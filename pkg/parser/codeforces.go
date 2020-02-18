@@ -1,6 +1,9 @@
 package parser
 
 import (
+	"github.com/tudi98/copco/pkg/models"
+	"log"
+	"strconv"
 	"strings"
 
 	"github.com/gocolly/colly"
@@ -15,8 +18,9 @@ func (CodeforcesParser) GetUpcoming() []string {
 		colly.AllowedDomains("codeforces.com"),
 	)
 
+	// TODO: check html when there is a live contest
 	c.OnHTML("div.contestList > div.datatable > div > table > tbody > tr[data-contestid]", func(e *colly.HTMLElement) {
-		// TODO convert time to local time
+		// TODO: convert time to local time
 		contests = append(contests, e.ChildText("td:nth-child(1)")+" "+e.ChildText("td:nth-child(3)")+" MSK")
 	})
 
@@ -25,41 +29,64 @@ func (CodeforcesParser) GetUpcoming() []string {
 	return contests
 }
 
-func (CodeforcesParser) GetProblem(url string) Problem {
-	problem := Problem{}
+func (CodeforcesParser) GetProblem(url string) models.Problem {
+	problem := models.Problem{}
 
 	// TODO: validate url
 
-	url_array := strings.Split(url, "/")
-
-	problem.Type = url_array[len(url_array)-1]
+	urlArray := strings.Split(url, "/")
 	if strings.Contains(url, "problemset") {
-		problem.ContestId = url_array[len(url_array)-2]
+		problem.ContestId = urlArray[len(urlArray)-2]
 	} else {
-		problem.ContestId = url_array[len(url_array)-3]
+		problem.ContestId = urlArray[len(urlArray)-3]
 	}
-	problem.Id = problem.ContestId + problem.Type
+	problem.Id = problem.ContestId + urlArray[len(urlArray)-1]
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("codeforces.com"),
 	)
 
 	c.OnHTML("div.problem-statement", func(e *colly.HTMLElement) {
+		problem.Name = e.ChildText("div.header > div.title")
 		text := strings.Split(e.ChildText("div.header > div.time-limit"), "test")[1]
-		problem.TimeLimit = strings.Split(text, " ")[0]
+		timeLimit, err := strconv.ParseFloat(strings.Split(text, " ")[0], 32)
+		timeLimit *= 1000
+		problem.TimeLimit = int(timeLimit)
+		if err != nil {
+			log.Fatal(err)
+		}
 		text = strings.Split(e.ChildText("div.header > div.memory-limit"), "test")[1]
-		problem.MemoryLimit = strings.Split(text, " ")[0]
+		problem.MemoryLimit, err = strconv.Atoi(strings.Split(text, " ")[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		problem.MemoryLimit = problem.MemoryLimit * 1024 * 1024
 	})
 
 	c.OnHTML("div.input > pre", func(e *colly.HTMLElement) {
-		problem.Inputs = append(problem.Inputs, e.Text)
+		html, err := e.DOM.Html()
+		if err != nil {
+			log.Fatal(err)
+		}
+		r := strings.NewReplacer("<br/>", "\n", "<br />", "\n", "<br>", "\n")
+		html = r.Replace(html)
+		problem.Inputs = append(problem.Inputs, html)
 	})
 
 	c.OnHTML("div.output > pre", func(e *colly.HTMLElement) {
-		problem.Outputs = append(problem.Outputs, e.Text)
+		html, err := e.DOM.Html()
+		if err != nil {
+			log.Fatal(err)
+		}
+		r := strings.NewReplacer("<br/>", "\n", "<br />", "\n", "<br>", "\n")
+		html = r.Replace(html)
+		problem.Outputs = append(problem.Outputs, html)
 	})
 
-	c.Visit(url)
+	err := c.Visit(url)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return problem
 }

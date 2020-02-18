@@ -1,11 +1,11 @@
-package parser
+package models
 
 type Problem struct {
 	Id          string
+	Name        string
 	ContestId   string
-	Type        string
-	TimeLimit   string
-	MemoryLimit string
+	TimeLimit   int
+	MemoryLimit int
 	Inputs      []string
 	Outputs     []string
 }
