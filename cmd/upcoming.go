@@ -22,9 +22,9 @@ func init() {
 func upcoming() {
 	var p parser.Parser = parser.CodeforcesParser{}
 	upcomingContests := p.GetUpcoming()
-	fmt.Println("***** Upcoming Contests *****\n")
+	fmt.Println("***** Upcoming Contests *****")
 	for _, v := range upcomingContests {
 		fmt.Println(v)
 	}
-	fmt.Println("\n*****************************")
+	fmt.Println("*****************************")
 }

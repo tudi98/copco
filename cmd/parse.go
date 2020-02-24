@@ -34,23 +34,27 @@ func parseProblem(url string) {
 		separator = "\\"
 	}
 
-	problem_path := os.Getenv("COPCO_PATH") + separator + "codeforces" +
-		separator + problem.ContestId + separator + problem.Type
-	template_path := os.Getenv("COPCO_TEMPLATE")
+	problemPath := os.Getenv("COPCO_PATH") + separator + "codeforces" +
+		separator + problem.ContestId + separator + problem.Name
+	templatePath := os.Getenv("COPCO_TEMPLATE")
 
-	if _, err := os.Stat(problem_path); os.IsNotExist(err) {
-		os.MkdirAll(problem_path, os.ModePerm)
+	if _, err := os.Stat(problemPath); os.IsNotExist(err) {
+		err := os.MkdirAll(problemPath, os.ModePerm)
+		if err != nil {
+			log.Fatalf("Error when creating %s", problemPath)
+		}
 	}
 
-	from, err := os.Open(template_path)
+	from, err := os.Open(templatePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error when opening template %s", templatePath)
 	}
 	defer from.Close()
 
-	to, err := os.OpenFile(problem_path+separator+"main.cpp", os.O_RDWR|os.O_CREATE, 0666)
+	sourcePath := problemPath + separator + "main.cpp"
+	to, err := os.OpenFile(sourcePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Error when creating %s", sourcePath)
 	}
 	defer to.Close()
 
@@ -59,34 +63,55 @@ func parseProblem(url string) {
 		log.Fatal(err)
 	}
 
-	tests_path := problem_path + separator + "tests"
-	if _, err := os.Stat(tests_path); os.IsNotExist(err) {
-		os.MkdirAll(tests_path, os.ModePerm)
+	testsPath := problemPath + separator + "tests"
+	if _, err := os.Stat(testsPath); os.IsNotExist(err) {
+		err := os.MkdirAll(testsPath, os.ModePerm)
+		if err != nil {
+			log.Fatalf("Error when creating %s", testsPath)
+		}
 	}
 
 	for i, v := range problem.Inputs {
-		file, err := os.OpenFile(tests_path+separator+fmt.Sprintf("%d.in", i), os.O_RDWR|os.O_CREATE, 0666)
+		filePath := testsPath + separator + fmt.Sprintf("%d.in", i)
+		file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error while creating %s", filePath)
 		}
-		file.WriteString(v)
+		_, err = file.WriteString(v)
+		if err != nil {
+			log.Fatalf("Error while writing to %s", filePath)
+		}
 		file.Close()
 	}
 
 	for i, v := range problem.Outputs {
-		file, err := os.OpenFile(tests_path+separator+fmt.Sprintf("%d.ok", i), os.O_RDWR|os.O_CREATE, 0666)
+		filePath := testsPath + separator + fmt.Sprintf("%d.ok", i)
+		file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Error while creating %s", filePath)
 		}
-		file.WriteString(v)
+		_, err = file.WriteString(v)
+		if err != nil {
+			log.Fatalf("Error while writing to %s", filePath)
+		}
 		file.Close()
 	}
 
-	file, err := os.OpenFile(problem_path+separator+"problem.json", os.O_RDWR|os.O_CREATE, 0666)
-	json_val, err := json.Marshal(problem)
+	jsonPath := problemPath + separator + "problem.json"
+	file, err := os.OpenFile(jsonPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		log.Fatalf("Error when creating %s", jsonPath)
+	}
+
+	jsonVal, err := json.Marshal(problem)
 	if err != nil {
 		log.Fatal(err)
 	}
-	file.WriteString(string(json_val))
+
+	_, err = file.WriteString(string(jsonVal))
+	if err != nil {
+		log.Fatalf("Error when writing to %s", jsonPath)
+	}
+
 	file.Close()
 }
