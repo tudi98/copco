@@ -1,11 +1,16 @@
 package models
 
 type Problem struct {
-	Id          string
+	ProblemId   string
 	Name        string
 	ContestId   string
 	TimeLimit   int
 	MemoryLimit int
 	Inputs      []string
 	Outputs     []string
+}
+
+type Contest struct {
+	ContestId string
+	Urls      []string
 }
