@@ -1,23 +1,25 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/shirou/gopsutil/process"
-	"github.com/spf13/cobra"
-	"github.com/tudi98/copco/pkg/models"
-	"github.com/tudi98/copco/pkg/utils"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/shirou/gopsutil/process"
+	"github.com/spf13/cobra"
+	"github.com/tudi98/copco/pkg/parser/models"
 )
 
 var testCmd = &cobra.Command{
@@ -51,7 +53,7 @@ func test() {
 	}
 	color.Green("Compiled successfully!")
 
-	inputFiles := utils.GetFilesWithExtension(".in")
+	inputFiles := getFilesWithExtension(".in")
 
 	separator := "/"
 	if runtime.GOOS == "windows" {
@@ -152,8 +154,8 @@ func test() {
 			log.Fatalf("Error while opening %s", outFilePath)
 		}
 
-		ok := utils.TrimLines(okFileBytes)
-		out := utils.TrimLines(outFileBytes)
+		ok := trimLines(okFileBytes)
+		out := trimLines(outFileBytes)
 
 		if bytes.Compare(ok, out) == 0 {
 			color.Green("Passed")
@@ -161,4 +163,34 @@ func test() {
 			color.Red("Wrong Answer")
 		}
 	}
+}
+
+func trimLines(b []byte) []byte {
+	scanner := bufio.NewScanner(bytes.NewReader(b))
+	var lines [][]byte
+	for scanner.Scan() {
+		line := bytes.TrimSpace(scanner.Bytes())
+		lines = append(lines, line)
+	}
+	return bytes.Join(lines, []byte{'\n'})
+}
+
+func getFilesWithExtension(ext string) []string {
+	path, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	separator := "/"
+	if runtime.GOOS == "windows" {
+		separator = "\\"
+	}
+	path = path + separator + "tests"
+	var files []string
+	_ = filepath.Walk(path, func(path string, f os.FileInfo, _ error) error {
+		if !f.IsDir() && filepath.Ext(path) == ext {
+			files = append(files, "."+separator+"tests"+separator+f.Name())
+		}
+		return nil
+	})
+	return files
 }
