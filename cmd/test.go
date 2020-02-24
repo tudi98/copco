@@ -19,7 +19,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/shirou/gopsutil/process"
 	"github.com/spf13/cobra"
-	"github.com/tudi98/copco/pkg/parser/models"
+	"github.com/tudi98/copco/pkg/models"
 )
 
 var testCmd = &cobra.Command{

@@ -13,7 +13,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/gocolly/colly"
-	"github.com/tudi98/copco/pkg/parser/models"
+	"github.com/tudi98/copco/pkg/models"
 )
 
 func Parse(url string) {
@@ -171,11 +171,11 @@ func parseProblem(url string) models.Problem {
 		problem.Name = e.ChildText("div.header > div.title")
 		text := strings.Split(e.ChildText("div.header > div.time-limit"), "test")[1]
 		timeLimit, err := strconv.ParseFloat(strings.Split(text, " ")[0], 32)
-		timeLimit *= 1000
-		problem.TimeLimit = int(timeLimit)
 		if err != nil {
 			log.Fatal(err)
 		}
+		timeLimit *= 1000
+		problem.TimeLimit = int(timeLimit)
 		text = strings.Split(e.ChildText("div.header > div.memory-limit"), "test")[1]
 		problem.MemoryLimit, err = strconv.Atoi(strings.Split(text, " ")[0])
 		if err != nil {

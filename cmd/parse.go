@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"github.com/tudi98/copco/pkg/atcoder"
 	"log"
 	"net/url"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tudi98/copco/pkg/parser/codeforces"
+	"github.com/tudi98/copco/pkg/codeforces"
 )
 
 var parseCmd = &cobra.Command{
@@ -29,6 +30,8 @@ func parse(onlineJudgeUrl string) {
 	}
 	if strings.Contains(u.Host, "codeforces.com") {
 		codeforces.Parse(onlineJudgeUrl)
+	} else if strings.Contains(u.Host, "atcoder.jp") {
+		atcoder.Parse(onlineJudgeUrl)
 	} else {
 		log.Fatal("Site not supported.")
 	}
