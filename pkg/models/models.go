@@ -2,6 +2,7 @@ package models
 
 type Problem struct {
 	ProblemId   string
+	ProblemUrl  string
 	Name        string
 	ContestId   string
 	TimeLimit   int
@@ -11,6 +12,14 @@ type Problem struct {
 }
 
 type Contest struct {
-	ContestId string
-	Urls      []string
+	ContestId  string
+	ContestUrl string
+	Urls       []string
+}
+
+type ParserInterface interface {
+	ValidateContestUrl(url string) bool
+	ValidateProblemUrl(url string) bool
+	ParseContest(url string) (Contest, error)
+	ParseProblem(url string) (Problem, error)
 }
