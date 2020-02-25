@@ -1,142 +1,49 @@
 package atcoder
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
-	"log"
-	"os"
 	"regexp"
-	"runtime"
 	"strconv"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/gocolly/colly"
 	"github.com/tudi98/copco/pkg/models"
 )
 
-func Parse(url string) {
-	r1, _ := regexp.Compile("atcoder\\.jp/contests/.*/tasks/.*")
-	r2, _ := regexp.Compile("atcoder\\.jp/contests/.*/tasks")
-	r3, _ := regexp.Compile("atcoder\\.jp/contests/.*")
+const OnlineJudge = "atcoder"
+
+type Parser struct{}
+
+func (p Parser) ValidateContestUrl(url string) bool {
+	r1 := regexp.MustCompile("atcoder\\.jp/contests/.+/tasks")
+	r2 := regexp.MustCompile("atcoder\\.jp/contests/.+")
+	if r1.MatchString(url) || r2.MatchString(url) {
+		return true
+	}
+	return false
+}
+
+func (p Parser) ValidateProblemUrl(url string) bool {
+	r1 := regexp.MustCompile("atcoder\\.jp/contests/.+/tasks/.+")
 	if r1.MatchString(url) {
-		createProblem(url)
-	} else if r2.MatchString(url) {
-		createContest(url)
-	} else if r3.MatchString(url) {
-		createContest(url + "/tasks")
-	} else {
-		log.Fatal("Invalid url")
+		return true
 	}
+	return false
 }
 
-func createContest(url string) {
-	contest := parseContest(url)
-	for _, problemUrl := range contest.Urls {
-		createProblem(problemUrl)
-	}
-	color.Green("Done!")
-}
-
-func createProblem(url string) {
-	fmt.Printf("%s...", url)
-
-	separator := "/"
-	if runtime.GOOS == "windows" {
-		separator = "\\"
-	}
-
-	problem := parseProblem(url)
-
-	problemPath := os.Getenv("COPCO_PATH") + separator + "atcoder" + separator + problem.ContestId + separator + problem.Name
-	templatePath := os.Getenv("COPCO_TEMPLATE")
-
-	if _, err := os.Stat(problemPath); os.IsNotExist(err) {
-		err := os.MkdirAll(problemPath, os.ModePerm)
-		if err != nil {
-			log.Fatalf("Error when creating %s", problemPath)
-		}
-	}
-
-	from, err := os.Open(templatePath)
-	if err != nil {
-		log.Fatalf("Error when opening template %s", templatePath)
-	}
-	defer from.Close()
-
-	sourcePath := problemPath + separator + "main.cpp"
-	to, err := os.OpenFile(sourcePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		log.Fatalf("Error when creating %s", sourcePath)
-	}
-	defer to.Close()
-
-	_, err = io.Copy(to, from)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	testsPath := problemPath + separator + "tests"
-	if _, err := os.Stat(testsPath); os.IsNotExist(err) {
-		err := os.MkdirAll(testsPath, os.ModePerm)
-		if err != nil {
-			log.Fatalf("Error when creating %s", testsPath)
-		}
-	}
-
-	for i, v := range problem.Inputs {
-		filePath := testsPath + separator + fmt.Sprintf("%d.in", i)
-		file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-		if err != nil {
-			log.Fatalf("Error while creating %s", filePath)
-		}
-		_, err = file.WriteString(v)
-		if err != nil {
-			log.Fatalf("Error while writing to %s", filePath)
-		}
-		file.Close()
-	}
-
-	for i, v := range problem.Outputs {
-		filePath := testsPath + separator + fmt.Sprintf("%d.ok", i)
-		file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-		if err != nil {
-			log.Fatalf("Error while creating %s", filePath)
-		}
-		_, err = file.WriteString(v)
-		if err != nil {
-			log.Fatalf("Error while writing to %s", filePath)
-		}
-		file.Close()
-	}
-
-	jsonPath := problemPath + separator + "problem.json"
-	file, err := os.OpenFile(jsonPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-	if err != nil {
-		log.Fatalf("Error when creating %s", jsonPath)
-	}
-
-	jsonVal, err := json.Marshal(problem)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = file.WriteString(string(jsonVal))
-	if err != nil {
-		log.Fatalf("Error when writing to %s", jsonPath)
-	}
-
-	file.Close()
-
-	color.Green("OK!")
-}
-
-func parseContest(url string) models.Contest {
+func (p Parser) ParseContest(url string) (models.Contest, error) {
 	contest := models.Contest{}
 
 	urlArray := strings.Split(url, "/")
-	contest.ContestId = urlArray[len(urlArray)-1]
+
+	if urlArray[len(urlArray)-1] == "tasks" {
+		contest.ContestId = urlArray[len(urlArray)-2]
+	} else {
+		url += "/tasks"
+		contest.ContestId = urlArray[len(urlArray)-1]
+	}
+
+	contest.ContestUrl = url
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("atcoder.jp"),
@@ -148,18 +55,22 @@ func parseContest(url string) models.Contest {
 
 	err := c.Visit(url)
 	if err != nil {
-		log.Fatal(err)
+		return contest, err
 	}
 
-	return contest
+	return contest, nil
 }
 
-func parseProblem(url string) models.Problem {
+func (p Parser) ParseProblem(url string) (models.Problem, error) {
 	problem := models.Problem{}
 
 	urlArray := strings.Split(url, "/")
 	problem.ContestId = urlArray[len(urlArray)-3]
 	problem.ProblemId = urlArray[len(urlArray)-1]
+	problem.ProblemUrl = url
+
+	var parsingErr error
+	parsingErr = nil
 
 	c := colly.NewCollector(
 		colly.AllowedDomains("atcoder.jp"),
@@ -171,15 +82,21 @@ func parseProblem(url string) models.Problem {
 		}
 		problem.Name = e.ChildText("span.h2")
 		text := strings.Split(e.ChildText("p"), " ")
+		if len(text) < 8 {
+			parsingErr = fmt.Errorf("could not parse time limit and memory limit")
+			return
+		}
 		timeLimit, err := strconv.ParseFloat(text[2], 32)
 		if err != nil {
-			log.Fatal(err)
+			parsingErr = err
+			return
 		}
 		timeLimit *= 1000
 		problem.TimeLimit = int(timeLimit)
 		problem.MemoryLimit, err = strconv.Atoi(text[7])
 		if err != nil {
-			log.Fatal(err)
+			parsingErr = err
+			return
 		}
 		problem.MemoryLimit = problem.MemoryLimit * 1024 * 1024
 	})
@@ -192,10 +109,14 @@ func parseProblem(url string) models.Problem {
 		}
 	})
 
+	c.OnError(func(r *colly.Response, err error) {
+		parsingErr = err
+	})
+
 	err := c.Visit(url)
 	if err != nil {
-		log.Fatal(err)
+		parsingErr = fmt.Errorf("error when parsing %s", url)
 	}
 
-	return problem
+	return problem, parsingErr
 }
