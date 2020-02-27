@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -19,7 +18,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/shirou/gopsutil/process"
 	"github.com/spf13/cobra"
-	"github.com/tudi98/copco/pkg/models"
+	"github.com/tudi98/copco/parser/models"
 )
 
 var testCmd = &cobra.Command{
@@ -55,14 +54,11 @@ func test() {
 
 	inputFiles := getFilesWithExtension(".in")
 
-	separator := "/"
-	if runtime.GOOS == "windows" {
-		separator = "\\"
-	}
+	sep := string(os.PathSeparator)
 
 	fmt.Println("Running on tests: ")
 	for _, filePath := range inputFiles {
-		testName := strings.Split(filePath, separator)[2]
+		testName := strings.Split(filePath, sep)[2]
 		runCmd := exec.Command("./main")
 
 		fmt.Printf(" - %s : ", testName)
@@ -180,15 +176,12 @@ func getFilesWithExtension(ext string) []string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	separator := "/"
-	if runtime.GOOS == "windows" {
-		separator = "\\"
-	}
-	path = path + separator + "tests"
+	sep := string(os.PathSeparator)
+	path = path + sep + "tests"
 	var files []string
 	_ = filepath.Walk(path, func(path string, f os.FileInfo, _ error) error {
 		if !f.IsDir() && filepath.Ext(path) == ext {
-			files = append(files, "."+separator+"tests"+separator+f.Name())
+			files = append(files, "."+sep+"tests"+sep+f.Name())
 		}
 		return nil
 	})

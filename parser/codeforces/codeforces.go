@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/gocolly/colly"
-	"github.com/tudi98/copco/pkg/models"
+	"github.com/tudi98/copco/parser/models"
 )
 
 const OnlineJudge = "codeforces"
