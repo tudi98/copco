@@ -7,14 +7,14 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"github.com/tudi98/copco/pkg/atcoder"
-	"github.com/tudi98/copco/pkg/codeforces"
-	"github.com/tudi98/copco/pkg/models"
+	"github.com/spf13/viper"
+	"github.com/tudi98/copco/parser/atcoder"
+	"github.com/tudi98/copco/parser/codeforces"
+	"github.com/tudi98/copco/parser/models"
 )
 
 var parseCmd = &cobra.Command{
@@ -70,18 +70,15 @@ func createContest(Url string, parser models.ParserInterface, onlineJudge string
 }
 
 func createProblem(Url string, parser models.ParserInterface, onlineJudge string) {
-	separator := "/"
-	if runtime.GOOS == "windows" {
-		separator = "\\"
-	}
+	sep := string(os.PathSeparator)
 
 	problem, err := parser.ParseProblem(Url)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	problemPath := os.Getenv("COPCO_PATH") + separator + onlineJudge + separator + problem.ContestId + separator + problem.Name
-	templatePath := os.Getenv("COPCO_TEMPLATE")
+	problemPath := viper.GetString("COPCO_PATH") + sep + onlineJudge + sep + problem.ContestId + sep + problem.Name
+	templatePath := viper.GetString("COPCO_TEMPLATE")
 
 	if _, err := os.Stat(problemPath); os.IsNotExist(err) {
 		err := os.MkdirAll(problemPath, os.ModePerm)
@@ -90,13 +87,13 @@ func createProblem(Url string, parser models.ParserInterface, onlineJudge string
 		}
 	}
 
-	from, err := os.Open(templatePath)
+	from, err := os.OpenFile(templatePath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatalf("Error when opening template %s", templatePath)
 	}
 	defer from.Close()
 
-	sourcePath := problemPath + separator + "main.cpp"
+	sourcePath := problemPath + sep + "main.cpp"
 	to, err := os.OpenFile(sourcePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatalf("Error when creating %s", sourcePath)
@@ -108,7 +105,7 @@ func createProblem(Url string, parser models.ParserInterface, onlineJudge string
 		log.Fatal(err)
 	}
 
-	testsPath := problemPath + separator + "tests"
+	testsPath := problemPath + sep + "tests"
 	if _, err := os.Stat(testsPath); os.IsNotExist(err) {
 		err := os.MkdirAll(testsPath, os.ModePerm)
 		if err != nil {
@@ -117,7 +114,7 @@ func createProblem(Url string, parser models.ParserInterface, onlineJudge string
 	}
 
 	for i, v := range problem.Inputs {
-		filePath := testsPath + separator + fmt.Sprintf("%d.in", i)
+		filePath := testsPath + sep + fmt.Sprintf("%d.in", i)
 		file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
 			log.Fatalf("Error while creating %s", filePath)
@@ -130,7 +127,7 @@ func createProblem(Url string, parser models.ParserInterface, onlineJudge string
 	}
 
 	for i, v := range problem.Outputs {
-		filePath := testsPath + separator + fmt.Sprintf("%d.ok", i)
+		filePath := testsPath + sep + fmt.Sprintf("%d.ok", i)
 		file, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
 			log.Fatalf("Error while creating %s", filePath)
@@ -142,7 +139,7 @@ func createProblem(Url string, parser models.ParserInterface, onlineJudge string
 		file.Close()
 	}
 
-	jsonPath := problemPath + separator + "problem.json"
+	jsonPath := problemPath + sep + "problem.json"
 	file, err := os.OpenFile(jsonPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		log.Fatalf("Error when creating %s", jsonPath)
