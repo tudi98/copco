@@ -31,7 +31,6 @@ func init() {
 	viper.AddConfigPath(home)
 	viper.SetConfigName(".copco")
 	viper.SetConfigType("yaml")
-	viper.AutomaticEnv()
 
 	viper.SetDefault("COPCO_PATH", home+string(os.PathSeparator)+"copco")
 	viper.SetDefault("COPCO_TEMPLATE", home+string(os.PathSeparator)+"copco"+string(os.PathSeparator)+"template.cpp")
