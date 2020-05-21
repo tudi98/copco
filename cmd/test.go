@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
 	"log"
@@ -43,7 +44,8 @@ func test() {
 		log.Fatal("Error while parsing problem.json")
 	}
 
-	compileCmd := exec.Command("g++", "-O2", "-o", "main", "main.cpp")
+	copcoCompileCommand := viper.GetStringMapString("COPCO_COMPILE_COMMAND")
+	compileCmd := exec.Command(copcoCompileCommand["command"], strings.Fields(copcoCompileCommand["args"])...)
 	compileCmd.Stderr = os.Stderr
 	compileCmd.Stdout = os.Stdout
 	if err := compileCmd.Run(); err != nil {

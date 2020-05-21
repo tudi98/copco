@@ -32,12 +32,15 @@ func init() {
 	viper.SetConfigName(".copco")
 	viper.SetConfigType("yaml")
 
-	// TODO: Add config variable for compilation command
+	viper.SetDefault("COPCO_COMPILE_COMMAND", map[string]string{
+		"command": "g++",
+		"args":    "-o main main.cpp",
+	})
 	viper.SetDefault("COPCO_PATH", home+string(os.PathSeparator)+"copco")
 	viper.SetDefault("COPCO_TEMPLATE", home+string(os.PathSeparator)+"copco"+string(os.PathSeparator)+"template.cpp")
 	viper.SetDefault("COPCO_CUSTOM_CODE", home+string(os.PathSeparator)+"copco"+string(os.PathSeparator)+"custom_code")
-	_ = viper.SafeWriteConfig()
 
+	_ = viper.SafeWriteConfig()
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal(err)
 	}
