@@ -62,7 +62,7 @@ func (p Parser) ParseContest(url string) (models.Contest, error) {
 
 	err := c.Visit(url)
 	if err != nil {
-		return contest, err
+		return models.Contest{}, err
 	}
 
 	return contest, nil
@@ -123,6 +123,10 @@ func (p Parser) ParseProblem(url string) (models.Problem, error) {
 	err := c.Visit(url)
 	if err != nil {
 		parsingErr = fmt.Errorf("error when parsing %s", url)
+	}
+
+	if parsingErr != nil {
+		problem = models.Problem{}
 	}
 
 	return problem, parsingErr
