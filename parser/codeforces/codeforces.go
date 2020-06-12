@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/tudi98/copco/parser/models"
@@ -84,6 +85,12 @@ func (p Parser) ParseProblem(url string) (models.Problem, error) {
 	c := colly.NewCollector(
 		colly.AllowedDomains("codeforces.com"),
 	)
+
+	// Set a delay between requests
+	c.Limit(&colly.LimitRule{
+		DomainGlob: "codeforces.com/*",
+		Delay:      1 * time.Second,
+	})
 
 	c.OnResponse(func(r *colly.Response) {
 		if r.Request.URL.Path == "/" {
