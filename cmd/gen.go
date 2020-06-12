@@ -30,6 +30,9 @@ func gen(file string) {
 		log.Fatalf("Error while opening %s", file)
 	}
 	sourceCode, err := generateSourceCode(string(content))
+	if err != nil {
+		log.Fatal(err)
+	}
 	err = ioutil.WriteFile(file, []byte(sourceCode), 0644)
 	if err != nil {
 		log.Fatalf("Error while writing to %s", file)
