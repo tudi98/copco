@@ -2,13 +2,11 @@ package atcoder
 
 import (
 	"fmt"
+	"github.com/gocolly/colly/v2"
+	"github.com/tudi98/copco/parser/models"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
-
-	"github.com/gocolly/colly/v2"
-	"github.com/tudi98/copco/parser/models"
 )
 
 const OnlineJudge = "atcoder"
@@ -49,12 +47,6 @@ func (p Parser) ParseContest(url string) (models.Contest, error) {
 	c := colly.NewCollector(
 		colly.AllowedDomains("atcoder.jp"),
 	)
-
-	// Set a delay between requests
-	c.Limit(&colly.LimitRule{
-		DomainGlob: "atcoder.jp/*",
-		Delay:      1 * time.Second,
-	})
 
 	c.OnHTML("table > tbody > tr > td:first-child > a[href]", func(e *colly.HTMLElement) {
 		contest.Urls = append(contest.Urls, "https://atcoder.jp"+e.Attr("href"))

@@ -61,7 +61,7 @@ func test() {
 	fmt.Println("Running on tests: ")
 	for _, filePath := range inputFiles {
 		testName := strings.Split(filePath, sep)[2]
-		runCmd := exec.Command("./main")
+		runCmd := exec.Command(viper.GetString("COPCO_RUN_COMMAND"))
 
 		fmt.Printf(" - %s : ", testName)
 
