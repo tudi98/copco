@@ -36,7 +36,10 @@ func init() {
 		"command": "g++",
 		"args":    "-o main main.cpp",
 	})
-	viper.SetDefault("COPCO_RUN_COMMAND", "./main")
+	viper.SetDefault("COPCO_RUN_COMMAND", map[string]string{
+		"command": "./main",
+		"args":    "",
+	})
 	viper.SetDefault("COPCO_PATH", home+string(os.PathSeparator)+"copco")
 	viper.SetDefault("COPCO_TEMPLATE", home+string(os.PathSeparator)+"copco"+string(os.PathSeparator)+"template.cpp")
 	viper.SetDefault("COPCO_CUSTOM_CODE", home+string(os.PathSeparator)+"copco"+string(os.PathSeparator)+"custom_code")

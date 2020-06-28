@@ -45,23 +45,25 @@ func test() {
 	}
 
 	copcoCompileCommand := viper.GetStringMapString("COPCO_COMPILE_COMMAND")
-	compileCmd := exec.Command(copcoCompileCommand["command"], strings.Fields(copcoCompileCommand["args"])...)
-	compileCmd.Stderr = os.Stderr
-	compileCmd.Stdout = os.Stdout
-	if err := compileCmd.Run(); err != nil {
-		color.Red("Compilation error!")
-		return
+	if copcoCompileCommand["command"] != "" {
+		compileCmd := exec.Command(copcoCompileCommand["command"], strings.Fields(copcoCompileCommand["args"])...)
+		compileCmd.Stderr = os.Stderr
+		compileCmd.Stdout = os.Stdout
+		if err := compileCmd.Run(); err != nil {
+			color.Red("Compilation error!")
+			return
+		}
+		color.Green("Compiled successfully!")
 	}
-	color.Green("Compiled successfully!")
-
 	inputFiles := getFilesWithExtension(".in")
 
 	sep := string(os.PathSeparator)
 
+	copcoRunCommand := viper.GetStringMapString("COPCO_RUN_COMMAND")
 	fmt.Println("Running on tests: ")
 	for _, filePath := range inputFiles {
 		testName := strings.Split(filePath, sep)[2]
-		runCmd := exec.Command(viper.GetString("COPCO_RUN_COMMAND"))
+		runCmd := exec.Command(copcoRunCommand["command"], strings.Fields(copcoRunCommand["args"])...)
 
 		fmt.Printf(" - %s : ", testName)
 
